@@ -11,7 +11,7 @@
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <RootNamespace></RootNamespace>
-    <ProjectGuid>{9C3095C8-6E59-9BB2-A1FA-B8631EBE8ADA}</ProjectGuid>
+    <ProjectGuid>{A00D90DE-E64A-6224-F748-DF88D69AB470}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <AssemblyName>Assembly-CSharp</AssemblyName>
@@ -68,6 +68,9 @@
     <Compile Include="Assets\Scripts\Database\Model\Model_Worker.cs" />
     <Compile Include="Assets\Scripts\Database\mongoDatabase.cs" />
     <Compile Include="Assets\Scripts\LoginServer.cs" />
+    <Compile Include="Assets\Scripts\Shared\Game_Types\Game_Location.cs" />
+    <Compile Include="Assets\Scripts\Shared\Game_Types\Game_Player.cs" />
+    <Compile Include="Assets\Scripts\Shared\Game_Types\Game_Worker.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Login_Messages\Net_CreateAccount.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Login_Messages\Net_LoginRequest.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Login_Messages\Net_OnCreateAccount.cs" />
@@ -77,43 +80,45 @@
     <Compile Include="Assets\Scripts\Shared\Net_Messages\NetMessage.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Sector_Hub_Message\Net_LocationDataRequest.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Sector_Hub_Message\Net_OnLocationDataRequest.cs" />
+    <Compile Include="Assets\Scripts\Shared\Net_Messages\Sector_Hub_Message\Net_OnThisPlayerDataRequest.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Sector_Hub_Message\Net_OnWorkerDataRequest.cs" />
+    <Compile Include="Assets\Scripts\Shared\Net_Messages\Sector_Hub_Message\Net_ThisPlayerDataRequest.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Sector_Hub_Message\Net_WorkerDataRequest.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Sector_Hub_Message\NetSectorMessage.cs" />
     <Compile Include="Assets\Scripts\Shared\RSA.cs" />
     <Compile Include="Assets\Scripts\Shared\Utility.cs" />
     <Reference Include="Unity.Timeline.Editor">
-      <HintPath>F:/Game_Server/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>
+      <HintPath>F:/Login_Server/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.VSCode.Editor">
-      <HintPath>F:/Game_Server/Library/ScriptAssemblies/Unity.VSCode.Editor.dll</HintPath>
+      <HintPath>F:/Login_Server/Library/ScriptAssemblies/Unity.VSCode.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro.Editor">
-      <HintPath>F:/Game_Server/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
+      <HintPath>F:/Login_Server/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>F:/Game_Server/Library/ScriptAssemblies/UnityEngine.UI.dll</HintPath>
+      <HintPath>F:/Login_Server/Library/ScriptAssemblies/UnityEngine.UI.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Timeline">
-      <HintPath>F:/Game_Server/Library/ScriptAssemblies/Unity.Timeline.dll</HintPath>
+      <HintPath>F:/Login_Server/Library/ScriptAssemblies/Unity.Timeline.dll</HintPath>
     </Reference>
     <Reference Include="Unity.CollabProxy.Editor">
-      <HintPath>F:/Game_Server/Library/ScriptAssemblies/Unity.CollabProxy.Editor.dll</HintPath>
+      <HintPath>F:/Login_Server/Library/ScriptAssemblies/Unity.CollabProxy.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Rider.Editor">
-      <HintPath>F:/Game_Server/Library/ScriptAssemblies/Unity.Rider.Editor.dll</HintPath>
+      <HintPath>F:/Login_Server/Library/ScriptAssemblies/Unity.Rider.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.2D.Sprite.Editor">
-      <HintPath>F:/Game_Server/Library/ScriptAssemblies/Unity.2D.Sprite.Editor.dll</HintPath>
+      <HintPath>F:/Login_Server/Library/ScriptAssemblies/Unity.2D.Sprite.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.2D.Tilemap.Editor">
-      <HintPath>F:/Game_Server/Library/ScriptAssemblies/Unity.2D.Tilemap.Editor.dll</HintPath>
+      <HintPath>F:/Login_Server/Library/ScriptAssemblies/Unity.2D.Tilemap.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
-      <HintPath>F:/Game_Server/Library/ScriptAssemblies/Unity.TextMeshPro.dll</HintPath>
+      <HintPath>F:/Login_Server/Library/ScriptAssemblies/Unity.TextMeshPro.dll</HintPath>
     </Reference>
     <Reference Include="UnityEditor.UI">
-      <HintPath>F:/Game_Server/Library/ScriptAssemblies/UnityEditor.UI.dll</HintPath>
+      <HintPath>F:/Login_Server/Library/ScriptAssemblies/UnityEditor.UI.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AIModule">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.2.0f1/Editor/Data/Managed/UnityEngine/UnityEngine.AIModule.dll</HintPath>
@@ -293,10 +298,10 @@
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.2.0f1/Editor/Data/Managed/UnityEngine/UnityEngine.XRModule.dll</HintPath>
     </Reference>
     <Reference Include="MongoDB.Bson">
-      <HintPath>F:/Game_Server/Assets/Scripts/Database/Plugins/MongoDB.Bson.dll</HintPath>
+      <HintPath>F:/Login_Server/Assets/Scripts/Database/Plugins/MongoDB.Bson.dll</HintPath>
     </Reference>
     <Reference Include="MongoDB.Driver">
-      <HintPath>F:/Game_Server/Assets/Scripts/Database/Plugins/MongoDB.Driver.dll</HintPath>
+      <HintPath>F:/Login_Server/Assets/Scripts/Database/Plugins/MongoDB.Driver.dll</HintPath>
     </Reference>
     <Reference Include="netstandard">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.2.0f1/Editor/Data/NetStandard/ref/2.0.0/netstandard.dll</HintPath>

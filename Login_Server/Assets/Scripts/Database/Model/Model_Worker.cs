@@ -1,13 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Driver;
 
-public static class WorkerActivity
-{
-    public const byte Idle = 0;
-    public const byte Captain = 1;
-    public const byte Tactician = 2;
-}
-
 public class Model_Worker
 {
     //id in db
@@ -20,9 +13,10 @@ public class Model_Worker
     //location info
     public MongoDBRef location;
     public string locationName;
+    public byte sector;
 
     //worker's name
-    public string name;
+    public string workerName;
 
     //activity info
     public bool isInCombat;

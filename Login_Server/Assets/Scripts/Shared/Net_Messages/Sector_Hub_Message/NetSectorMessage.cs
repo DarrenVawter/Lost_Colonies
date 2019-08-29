@@ -2,8 +2,8 @@
 {
     public const byte None = 0;
 
-    public const byte RequestInit = 1;
-    public const byte OnRequestInit = 2;
+    public const byte ThisPlayerDataRequest = 1;
+    public const byte OnThisPlayerDataRequest = 2;
 
     public const byte RequestShipCombat = 3;
     public const byte OnRequestShipCombat = 4;

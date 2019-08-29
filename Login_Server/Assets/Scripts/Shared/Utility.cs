@@ -49,7 +49,7 @@ public static class Utility
     public static string GenerateRandomToken(int length)
     {
         Random r = new Random();
-        return new string(Enumerable.Repeat(RANDOM_CHARS, length).Select(s => s[r.Next(s.Length)]).ToArray());
+        return new string(Enumerable.Repeat(RANDOM_CHARS, length).Select(s => s[r.Next(s.Length)]).ToArray()) + DateTime.Now.ToShortTimeString();
     }
 
     public static string Sha256FromString(string toHash)

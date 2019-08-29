@@ -1,7 +1,7 @@
 ﻿[System.Serializable]
 public class Net_WorkerDataRequest : NetSectorMessage
 {
-    public string workerName { get; set; }
+    public string workerName { get; }
 
     public Net_WorkerDataRequest(string workerName)
     {

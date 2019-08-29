@@ -1,20 +1,12 @@
 ﻿[System.Serializable]
 public class Net_OnLocationDataRequest : NetSectorMessage
 {
-    public string locationName { get; set; }
-    public bool isShip { get; set; }//false->isColony
-    public short sector { get; set; }
-    public short gridX { get; set; }
-    public short gridY { get; set; }
+    public Game_Location location { get; }
 
-    public Net_OnLocationDataRequest(string locationName, bool isShip, short sector, short gridX, short gridY)
+    public Net_OnLocationDataRequest(Game_Location location)
     {
         OP = NetSectorOP.OnLocationDataRequest;
 
-        this.locationName = locationName;
-        this.isShip = isShip;
-        this.sector = sector;
-        this.gridX = gridX;
-        this.gridY = gridY;
+        this.location = location;
     }
 }

@@ -10,13 +10,6 @@ using UnityEngine.Networking;
  *  -make sector ip's static and tie them in to the switch statement @on login request
  * 
  */
-
-public static class SectorCode
-{
-    public const byte None = 0;
-    public const byte RedSector = 1;
-}
-
 public class LoginServer : MonoBehaviour
 {
 
@@ -107,7 +100,7 @@ public class LoginServer : MonoBehaviour
         int dataSize;
 
         NetworkEventType type = NetworkTransport.Receive(out recHostID, out connectionID, out channelID, recBuffer, BYTE_SIZE, out dataSize, out error);
-        
+
         switch (type)
         {
             case NetworkEventType.Nothing:
@@ -117,7 +110,7 @@ public class LoginServer : MonoBehaviour
                 BinaryFormatter formatter = new BinaryFormatter();
                 MemoryStream ms = new MemoryStream(recBuffer);
                 NetMsg msg = (NetMsg)formatter.Deserialize(ms);
-                Debug.Log(string.Format("[Login Server]: Recieved message: {0}", msg.OP));
+                Debug.Log(string.Format("[Login Server]: Recieved Data (RT-{0}, OP-{1}).", msg.RT, msg.OP));
                 OnData(connectionID, channelID, recHostID, msg);
                 break;
             

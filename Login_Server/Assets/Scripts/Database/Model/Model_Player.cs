@@ -1,12 +1,36 @@
-﻿using MongoDB.Driver;
+﻿using MongoDB.Bson;
+using MongoDB.Driver;
+using System.Collections.Generic;
+
+public static class SectorCode
+{
+    public const byte None = 0;
+    public const byte RedSector = 1;
+}
+
+public static class PlayerActivity
+{
+    public const byte Offline = 0;
+    public const byte Idle = 1;
+    public const byte Navigating = 2;
+    public const byte CombatNavigating = 3;
+    //TODO: other activities
+}
 
 public class Model_Player
 {
-    public int ActiveConnectionID { set; get; }
+    //id in db
+    public ObjectId _id { set; get; }
+
     public string Token { get; set; }
     public string Username { get; set; }
+    public string Discriminator { get; set; }
+
+    public BsonDateTime CreatedOn { get; set; }
+    public BsonDateTime LastLogin { get; set; }
+
+    public byte Sector { get; set; }
     public byte Activity { get; set; }
 
-    public short nWorkers;
-    public MongoDBRef[] Workers { get; set; } 
+    public List<MongoDBRef> Workers { get; set; } 
 }

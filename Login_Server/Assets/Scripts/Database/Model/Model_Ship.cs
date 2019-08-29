@@ -10,7 +10,7 @@ public class Model_Ship
     public MongoDBRef Owner { get; set; }
     
     //unique name of this ship
-    public string name;
+    public string shipName;
 
     //is occupied 
     //(mining asteroid, in combat)
