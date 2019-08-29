@@ -1,5 +1,6 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.IO;
+using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -99,7 +100,7 @@ public class SectorServer : MonoBehaviour
         int dataSize;
 
         NetworkEventType type = NetworkTransport.Receive(out recHostID, out connectionID, out channelID, recBuffer, BYTE_SIZE, out dataSize, out error);
-        
+
         switch (type)
         {
             case NetworkEventType.Nothing:
@@ -109,7 +110,7 @@ public class SectorServer : MonoBehaviour
                 BinaryFormatter formatter = new BinaryFormatter();
                 MemoryStream ms = new MemoryStream(recBuffer);
                 NetMsg msg = (NetMsg)formatter.Deserialize(ms);
-                Debug.Log(string.Format("[Sector Server]: Recieved message ({0}).", msg.OP));
+                Debug.Log(string.Format("[Sector Server]: Recieved Data (RT-{0}, OP-{1}).", msg.RT, msg.OP));
                 OnData(connectionID, channelID, recHostID, msg);
                 break;
             
@@ -152,8 +153,8 @@ public class SectorServer : MonoBehaviour
     {
         switch (msg.OP)
         {
-            case NetSectorOP.RequestInit:
-                //TODO: requested initialization
+            case NetSectorOP.ThisPlayerDataRequest:
+                ThisPlayerDataRequest(connectionID, recHostID, (Net_ThisPlayerDataRequest)msg);
                 break;
 
             case NetSectorOP.RequestShipCombat:
@@ -174,16 +175,34 @@ public class SectorServer : MonoBehaviour
         }
     }
 
+    private void ThisPlayerDataRequest(int connectionID, int recHostID, Net_ThisPlayerDataRequest msg)
+    {
+        //fetch player data by token
+        Debug.Log(msg.token);
+        Model_Player player = mdb.FetchPlayerByToken(msg.token);
+
+        //fetch model_workers by player and convert to game_workers
+        List<Game_Worker> workers = new List<Game_Worker>();
+        List<Model_Worker> mWorkers = mdb.FetchWorkersByPlayer(player);
+        foreach (Model_Worker mWorker in mWorkers)
+        {            
+            workers.Add(new Game_Worker(mWorker.ownerName, mWorker.locationName, mWorker.sector, mWorker.workerName, mWorker.isInCombat, mWorker.activity));
+        }
+                
+        //send messsage
+        SendClient(connectionID, recHostID, new Net_OnThisPlayerDataRequest(player.Username,player.Discriminator,workers));
+    }
+
     private void LocationDataRequest(int connectionID, int recHostID, Net_LocationDataRequest msg)
     {
         Model_Ship ship = mdb.FetchShipByName(msg.locationName);
         if (ship != null)
         {
-            SendClient(connectionID, recHostID, new Net_OnLocationDataRequest(ship.name, true, ship.sector, (short)Mathf.RoundToInt(ship.posX), (short)Mathf.RoundToInt(ship.posY)));
+            SendClient(connectionID, recHostID, new Net_OnLocationDataRequest(new Game_Location(ship.shipName, true, ship.sector, (short)Mathf.RoundToInt(ship.posX), (short)Mathf.RoundToInt(ship.posY))));
         }
         else
         {
-            //TODO: check if location is a colony
+            //TODO: check if location is a colony (or other)
         }
     }
 
@@ -192,7 +211,7 @@ public class SectorServer : MonoBehaviour
         Model_Worker worker = mdb.FetchWorkerByName(msg.workerName);
         if(worker != null)
         {
-            SendClient(connectionID, recHostID, new Net_OnWorkerDataRequest(worker.ownerName, worker.name, worker.locationName, worker.isInCombat, worker.activity));
+            SendClient(connectionID, recHostID, new Net_OnWorkerDataRequest(worker.ownerName, worker.workerName, worker.locationName, worker.sector, worker.isInCombat, worker.activity));
         }
         else
         {

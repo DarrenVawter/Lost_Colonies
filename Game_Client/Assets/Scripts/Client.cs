@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using TMPro;
@@ -22,6 +21,7 @@ public class Client : MonoBehaviour
 
     //has server started?
     private bool isStarted;
+    private bool isConnected;
 
     //communication channel between host and client(s)
     private byte reliableChannel;
@@ -31,18 +31,15 @@ public class Client : MonoBehaviour
     private int hostID;
 
     private byte error;
-
-    internal void SendWorkerDataRequest(string name)
-    {
-        SendServer(new Net_WorkerDataRequest(name));
-    }
-
+    
     private string RSAPubKey;
+    private string token;
     #endregion
 
     #region Stored_Data
-    Dictionary<string,Location> locations = new Dictionary<string, Location>();
-    Dictionary<string, Worker> workers = new Dictionary<string, Worker>();
+    Dictionary<string,Game_Location> locations = new Dictionary<string, Game_Location>();
+    Dictionary<string, Game_Worker> workers = new Dictionary<string, Game_Worker>();
+    Queue<NetMsg> sendQueue = new Queue<NetMsg>();
     #endregion
 
     #region Monobehavior
@@ -56,6 +53,7 @@ public class Client : MonoBehaviour
     private void Update()
     {
         UpdateMessagePump();
+        SendServer();
     }
     #endregion
 
@@ -87,13 +85,15 @@ public class Client : MonoBehaviour
         connectionID = NetworkTransport.Connect(hostID, SERVER_IP, PORT, 0, out error);
         Debug.Log(string.Format("[Network Client]: Connecting to {0}:{1}...", SERVER_IP, PORT));
 #endif
-
         isStarted = true;
     }
-    public void Disconnect()
-    {
+    public void ShutdownNetwork()
+    {        
+
+        //TODO: disconnect from old server (trigger disconnect event for logging purposes)
         NetworkTransport.Shutdown();
         isStarted = false;
+        isConnected = false;
     }
     public void UpdateMessagePump()
     {
@@ -111,7 +111,7 @@ public class Client : MonoBehaviour
         int dataSize;
 
         NetworkEventType type = NetworkTransport.Receive(out recHostID, out connectionID, out channelID, recBuffer, BYTE_SIZE, out dataSize, out error);
-
+        
         switch (type)
         {
             case NetworkEventType.Nothing:
@@ -127,11 +127,13 @@ public class Client : MonoBehaviour
 
             case NetworkEventType.ConnectEvent:
                 Debug.Log(string.Format("[Network Client]: Connected to server {0}.", connectionID));
+                isConnected = true;
                 break;
 
             case NetworkEventType.DisconnectEvent:
                 //TODO: attempt reconnect
                 Debug.Log(string.Format("[Network Client]: Disconnected from server {0}.", connectionID));
+                isConnected = false;
                 break;
 
             case NetworkEventType.BroadcastEvent:
@@ -176,7 +178,7 @@ public class Client : MonoBehaviour
                 break;
 
             case NetLoginOP.OnLoginRequest:
-                OnLoginRequest((Net_OnLoginRequest)msg);
+                OnLoginRequest(connectionID, (Net_OnLoginRequest)msg);
                 break;
 
             case NetLoginOP.OnKeyUpdate:
@@ -210,7 +212,7 @@ public class Client : MonoBehaviour
         }
     }
     
-    private void OnLoginRequest(Net_OnLoginRequest olr)
+    private void OnLoginRequest(int connectionID, Net_OnLoginRequest olr)
     {
         if (olr.response == 0)
         {
@@ -223,26 +225,31 @@ public class Client : MonoBehaviour
             //successful
             LoginScene.Instance.ChangeAuthenticationText("Successful Login");
 
+            //load sector hub
+            SceneManager.LoadScene("Sector_Hub", LoadSceneMode.Single);
+
+            //get login token from message
+            token = olr.token;
+
             //disconnect from login server
-            Disconnect();
+            ShutdownNetwork();
 
             //connect to sector server
             SERVER_IP = olr.sectorIP;
-            PORT = 27989; //TODO: delete me
+            PORT = 27989; //TODO: change & delete me
             Connect();
 
             if (!isStarted)
             {
                 //failed to connect to sector server
                 Debug.Log("[Network Client]: Failed to connect to sector server.");
+                return;
             }
-            else
-            {
-                //connected to server
 
-                //load sector hub
-                SceneManager.LoadScene("Sector_Hub", LoadSceneMode.Single);
-            }
+            //*now connected to sector server*
+            
+            //request info to init player game object
+            SendThisPlayerDataRequest(token);
         }
     }
     #endregion
@@ -252,6 +259,10 @@ public class Client : MonoBehaviour
     {
         switch (msg.OP)
         {
+            case NetSectorOP.OnThisPlayerDataRequest:
+                OnThisPlayerDataRequest((Net_OnThisPlayerDataRequest)msg);
+                break;
+
             case NetSectorOP.OnLocationDataRequest:
                 OnLocationDataRequest((Net_OnLocationDataRequest)msg);
                 break;
@@ -267,36 +278,49 @@ public class Client : MonoBehaviour
         }
     }
 
+    private void OnThisPlayerDataRequest(Net_OnThisPlayerDataRequest msg)
+    {
+        //TODO: reference player instance AFTER it has been loaded
+
+        //load player
+        Game_Player.Instance.init(msg);
+    }
+
     private void OnLocationDataRequest(Net_OnLocationDataRequest msg)
     {
-        locations.Add(msg.locationName, new Location(msg.locationName,msg.isShip,msg.sector,msg.gridX,msg.gridY));
+        locations.Add(msg.location.locationName, msg.location);
     }
 
     private void OnWorkerDataRequest(Net_OnWorkerDataRequest msg)
     {
-        workers.Add(msg.name, new Worker(msg.owner,msg.location,msg.name,msg.isInCombat,msg.activity));
+        workers.Add(msg.name, new Game_Worker(msg.owner,msg.location,msg.sector,msg.name,msg.isInCombat,msg.activity));
     }
     #endregion
-
-    #region Sector_Hub
-
-    #endregion
-
+    
     #endregion
 
     #region Send
-    internal void SendServer(NetMsg msg)
+    private void SendServer()
     {
+        if (!isConnected || sendQueue.Count == 0)
+        {
+            //TODO create a timer somewhere and allow max attempted time for sends
+            return;
+        }
+
         //holds message data
         byte[] buffer = new byte[BYTE_SIZE];
 
         //convert data into byte array
         BinaryFormatter formatter = new BinaryFormatter();
         MemoryStream ms = new MemoryStream(buffer);
-        formatter.Serialize(ms, msg);
+        formatter.Serialize(ms, sendQueue.Dequeue());
 
         NetworkTransport.Send(hostID, connectionID, reliableChannel, buffer, BYTE_SIZE, out error);
-
+    }
+    private void AddToSendQueue(NetMsg msg)
+    {
+        sendQueue.Enqueue(msg);
     }
 
     #region Login_Screen
@@ -339,7 +363,7 @@ public class Client : MonoBehaviour
         }
 
         LoginScene.Instance.ChangeAuthenticationText("Creating Account...");
-        SendServer(new Net_CreateAccount(username, hashedPassword, email));
+        AddToSendQueue(new Net_CreateAccount(username, hashedPassword, email));
     }
 
     internal void SendLoginRequest()
@@ -364,26 +388,41 @@ public class Client : MonoBehaviour
         }
 
         LoginScene.Instance.ChangeAuthenticationText("Logging in...");
-        SendServer(new Net_LoginRequest(user, RSA.encrypt(hashedPassword, RSAPubKey)));
+        AddToSendQueue(new Net_LoginRequest(user, RSA.encrypt(hashedPassword, RSAPubKey)));
     }
     #endregion
-    
+
     #region Sector_Hub
-    internal void SendLocationDataRequest(string locant)
+
+    private void SendThisPlayerDataRequest(string token)
     {
-        SendServer(new Net_LocationDataRequest(locant));
+        AddToSendQueue(new Net_ThisPlayerDataRequest(token));
     }
+
+    internal void SendWorkerDataRequest(string name)
+    {
+        AddToSendQueue(new Net_WorkerDataRequest(name));
+    }
+
+    private void SendLocationDataRequest(string locationName)
+    {
+        AddToSendQueue(new Net_LocationDataRequest(locationName));
+    }
+    
     #endregion
 
     #endregion
 
     #region GetData
-    internal Location GetLocationData(string location)
+
+    //TODO : maybe remove this?
+    #region Sector_Hub
+    internal Game_Location GetLocationData(string locationName)
     {
-        if (locations[location] != null)
+        if (locations[locationName] != null)
         {
-            Location loc = locations[location];
-            locations.Remove(location);
+            Game_Location loc = locations[locationName];
+            locations.Remove(locationName);
             return loc;
         }
         else
@@ -391,11 +430,12 @@ public class Client : MonoBehaviour
             return null;
         }
     }
-    internal Worker GetWorkerData(string workerName)
+
+    internal Game_Worker GetWorkerData(string workerName)
     {
         if (workers[workerName] != null)
         {
-            Worker workerData = workers[workerName];
+            Game_Worker workerData = workers[workerName];
             workers.Remove(workerName);
             return workerData;
         }
@@ -404,6 +444,8 @@ public class Client : MonoBehaviour
             return null;
         }
     }
+    #endregion
+
     #endregion
 
 }

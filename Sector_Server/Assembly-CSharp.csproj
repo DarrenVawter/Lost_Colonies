@@ -68,6 +68,9 @@
     <Compile Include="Assets\Scripts\Database\Model\Model_Worker.cs" />
     <Compile Include="Assets\Scripts\Database\mongoDatabase.cs" />
     <Compile Include="Assets\Scripts\SectorServer.cs" />
+    <Compile Include="Assets\Scripts\Shared\Game_Types\Game_Location.cs" />
+    <Compile Include="Assets\Scripts\Shared\Game_Types\Game_Player.cs" />
+    <Compile Include="Assets\Scripts\Shared\Game_Types\Game_Worker.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Login_Messages\Net_CreateAccount.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Login_Messages\Net_LoginRequest.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Login_Messages\Net_OnCreateAccount.cs" />
@@ -77,7 +80,9 @@
     <Compile Include="Assets\Scripts\Shared\Net_Messages\NetMessage.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Sector_Hub_Message\Net_LocationDataRequest.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Sector_Hub_Message\Net_OnLocationDataRequest.cs" />
+    <Compile Include="Assets\Scripts\Shared\Net_Messages\Sector_Hub_Message\Net_OnThisPlayerDataRequest.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Sector_Hub_Message\Net_OnWorkerDataRequest.cs" />
+    <Compile Include="Assets\Scripts\Shared\Net_Messages\Sector_Hub_Message\Net_ThisPlayerDataRequest.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Sector_Hub_Message\Net_WorkerDataRequest.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Sector_Hub_Message\NetSectorMessage.cs" />
     <Compile Include="Assets\Scripts\Shared\RSA.cs" />

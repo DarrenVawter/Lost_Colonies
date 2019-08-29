@@ -15,7 +15,6 @@ public class SectorScene : MonoBehaviour
         //intit scene components
         SectorHubMap.GetComponent<SH_Map>().init();
         Camera.main.GetComponent<SH_CameraHandler>().init();
-        SH_Player.Instance.init();
     }
     #endregion
 

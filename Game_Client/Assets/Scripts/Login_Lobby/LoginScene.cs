@@ -10,7 +10,6 @@ public class LoginScene : MonoBehaviour
         Instance = this;
         GameObject.Find("LoginPassword").GetComponent<TMP_InputField>().inputType = TMP_InputField.InputType.Password;
         GameObject.Find("CreatePassword").GetComponent<TMP_InputField>().inputType = TMP_InputField.InputType.Password;
-
     }
 
     public void OnClickCreateAccount()

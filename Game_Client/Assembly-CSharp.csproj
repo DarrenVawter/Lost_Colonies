@@ -63,8 +63,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\Client.cs" />
-    <Compile Include="Assets\Scripts\Game_Location.cs" />
-    <Compile Include="Assets\Scripts\Game_Worker.cs" />
     <Compile Include="Assets\Scripts\Login_Lobby\LoginScene.cs" />
     <Compile Include="Assets\Scripts\Sector_Hub\SectorScene.cs" />
     <Compile Include="Assets\Scripts\Sector_Hub\SH_CameraHandler.cs" />
@@ -72,8 +70,10 @@
     <Compile Include="Assets\Scripts\Sector_Hub\SH_Clickable.cs" />
     <Compile Include="Assets\Scripts\Sector_Hub\SH_ClickHandler.cs" />
     <Compile Include="Assets\Scripts\Sector_Hub\SH_Map.cs" />
-    <Compile Include="Assets\Scripts\Sector_Hub\SH_Player.cs" />
     <Compile Include="Assets\Scripts\Sector_Hub\SH_Ship.cs" />
+    <Compile Include="Assets\Scripts\Shared\Game_Types\Game_Location.cs" />
+    <Compile Include="Assets\Scripts\Shared\Game_Types\Game_Player.cs" />
+    <Compile Include="Assets\Scripts\Shared\Game_Types\Game_Worker.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Login_Messages\Net_CreateAccount.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Login_Messages\Net_LoginRequest.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Login_Messages\Net_OnCreateAccount.cs" />
@@ -83,7 +83,9 @@
     <Compile Include="Assets\Scripts\Shared\Net_Messages\NetMessage.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Sector_Hub_Message\Net_LocationDataRequest.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Sector_Hub_Message\Net_OnLocationDataRequest.cs" />
+    <Compile Include="Assets\Scripts\Shared\Net_Messages\Sector_Hub_Message\Net_OnThisPlayerDataRequest.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Sector_Hub_Message\Net_OnWorkerDataRequest.cs" />
+    <Compile Include="Assets\Scripts\Shared\Net_Messages\Sector_Hub_Message\Net_ThisPlayerDataRequest.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Sector_Hub_Message\Net_WorkerDataRequest.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Sector_Hub_Message\NetSectorMessage.cs" />
     <Compile Include="Assets\Scripts\Shared\RSA.cs" />
