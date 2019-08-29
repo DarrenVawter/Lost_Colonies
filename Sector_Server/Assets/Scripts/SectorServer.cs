@@ -178,19 +178,19 @@ public class SectorServer : MonoBehaviour
     private void ThisPlayerDataRequest(int connectionID, int recHostID, Net_ThisPlayerDataRequest msg)
     {
         //fetch player data by token
-        Debug.Log(msg.token);
         Model_Player player = mdb.FetchPlayerByToken(msg.token);
 
-        //fetch model_workers by player and convert to game_workers
-        List<Game_Worker> workers = new List<Game_Worker>();
-        List<Model_Worker> mWorkers = mdb.FetchWorkersByPlayer(player);
-        foreach (Model_Worker mWorker in mWorkers)
-        {            
-            workers.Add(new Game_Worker(mWorker.ownerName, mWorker.locationName, mWorker.sector, mWorker.workerName, mWorker.isInCombat, mWorker.activity));
+        //fetch model_workers by player and convert to message_workers
+        List<Message_Worker> messageWorkers = new List<Message_Worker>();
+        List<Model_Worker> modelWorkers = mdb.FetchWorkersByPlayer(player);
+        foreach (Model_Worker mWorker in modelWorkers)
+        {
+            messageWorkers.Add(new Message_Worker(mWorker.ownerName, mWorker.locationName, mWorker.sector, mWorker.workerName, mWorker.isInCombat, mWorker.activity));
         }
-                
-        //send messsage
-        SendClient(connectionID, recHostID, new Net_OnThisPlayerDataRequest(player.Username,player.Discriminator,workers));
+
+        //send messsage_player
+        SendClient(connectionID, recHostID, new Net_OnThisPlayerDataRequest(new Message_Player(player.Username,player.Discriminator,messageWorkers)));
+        Debug.Log("Sent Player Data.");
     }
 
     private void LocationDataRequest(int connectionID, int recHostID, Net_LocationDataRequest msg)
@@ -198,7 +198,7 @@ public class SectorServer : MonoBehaviour
         Model_Ship ship = mdb.FetchShipByName(msg.locationName);
         if (ship != null)
         {
-            SendClient(connectionID, recHostID, new Net_OnLocationDataRequest(new Game_Location(ship.shipName, true, ship.sector, (short)Mathf.RoundToInt(ship.posX), (short)Mathf.RoundToInt(ship.posY))));
+            SendClient(connectionID, recHostID, new Net_OnLocationDataRequest(new Message_Location(ship.shipName, true, ship.sector, (short)Mathf.RoundToInt(ship.posX), (short)Mathf.RoundToInt(ship.posY))));
         }
         else
         {

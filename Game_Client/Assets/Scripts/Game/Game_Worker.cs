@@ -1,27 +1,26 @@
-﻿public static class WorkerActivity
-{
-    public const byte Idle = 0;
-    public const byte Captain = 1;
-    public const byte Tactician = 2;
-}
+﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 
-[System.Serializable]
-public class Game_Worker
+public class Game_Worker : MonoBehaviour
 {
-    //owner of worker
-    private string owner;
+    //not included in message_worker
+    internal Message_Location activeLocationData;
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
+    //owner of worker
+    internal string owner { get; private set; }
+
     //location of worker
-    private string location;
-//    private Game_Location activeLocationData;
-    private byte sector;
+    internal string locationName { get; private set; }
+    //    private Game_Location activeLocationData;
+    internal byte sector { get; private set; }
 
     //worker's name
-    private string workerName;
+    internal string workerName { get; private set; }
 
     //activity info
-    private bool isInCombat;
-    private byte activity;
+    internal bool isInCombat { get; private set; }
+    internal byte activity { get; private set; }
 
     //stats
     //**
@@ -34,31 +33,30 @@ public class Game_Worker
     //**
 
     //is the worker the active one?
-    private bool isActive = false;
+    internal bool isActive { get; private set; }
 
     //is the worker initialized?
-    private bool isInit { get; set; }
-    
-    internal Game_Worker(string owner, string location, byte sector, string workerName, bool isInCombat, byte activity)
-    {
-        this.owner = owner;
-        this.location = location;
-        this.sector = sector;
-        this.workerName = workerName;
-        this.isInCombat = isInCombat;
-        this.activity = activity;
+    internal bool isInit { get; private set; }
 
+    internal Game_Worker()
+    {
+        owner = null;
+        locationName = null;
+        sector = SectorCode.None;
+        workerName = null;
+        isInCombat = false;
+        activity = WorkerActivity.Idle;
         isActive = false;
         isInit = false;
     }
 
-    internal void init(Game_Worker workerData)
+    internal void init(Message_Worker workerData)
     {
-        //reset init mark
+        //reset init marker
         isInit = false;
 
         owner = workerData.owner;
-        location = workerData.location;
+        locationName = workerData.locationName;
         workerName = workerData.workerName;
         isInCombat = workerData.isInCombat;
         activity = workerData.activity;
@@ -70,21 +68,27 @@ public class Game_Worker
 
     internal void SetActive()
     {
-        /*
-
         //verify initialization
         if (!isInit)
         {
-            init();
-        }          
-
+            Debug.Log(string.Format("Worker is not initialized ({0}).",workerName));
+            return;
+        }
+        
         //get location (in case it has changed)
-        Client.Instance.SendLocationDataRequest(location);
-        activeLocationData = Client.Instance.GetLocationData(location);
+        Network_Client.Instance.SendLocationDataRequest(locationName);
+        activeLocationData = Network_Client.Instance.GetLocationData(locationName);
+
+        breaking the code right here on purpose;
+        //
+        //**
+        //TODO: this probably shouldn't be in a while loop
+        //**
         while (activeLocationData == null)
         {
-            activeLocationData = Client.Instance.GetLocationData(location);
+            activeLocationData = Network_Client.Instance.GetLocationData(locationName);
         }
+        */
 
         //update worker's rendered location
         transform.position = new Vector3(activeLocationData.gridX, activeLocationData.gridY);
@@ -111,17 +115,14 @@ public class Game_Worker
         //deactive previous active worker if !null
 
         //set activity to idle since any current activity is halted when switching to this worker
-        //activity = WorkerActivity.Idle;
-        //TODO: remove this temporary line, re-enable the line above
-        activity = WorkerActivity.Captain;
+        activity = WorkerActivity.Idle;
+        //TODO: actually make worker go idle (stop current activity)
 
         //set player's active worker var
         Game_Player.Instance.activeWorker = this;
 
         //set as active
         isActive = true;
-
-        */
+        
     }
-    
 }

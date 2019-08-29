@@ -1,18 +1,12 @@
-﻿using System.Collections.Generic;
-
-[System.Serializable]
+﻿[System.Serializable]
 public class Net_OnThisPlayerDataRequest : NetSectorMessage
 {
-    public string username { get; }
-    public string discriminator { get; }
-    public List<Game_Worker> workers { get; }
+    internal Message_Player player { get; set; }
 
-    public Net_OnThisPlayerDataRequest(string username, string discriminator, List<Game_Worker> workers)
+    public Net_OnThisPlayerDataRequest(Message_Player player)
     {
         OP = NetSectorOP.OnThisPlayerDataRequest;
 
-        this.username = username;
-        this.discriminator = discriminator;
-        this.workers = workers;
+        this.player = player;
     }
 }

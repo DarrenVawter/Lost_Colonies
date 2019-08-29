@@ -6,9 +6,9 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 
-public class Client : MonoBehaviour
+public class Network_Client : MonoBehaviour
 {
-    public static Client Instance { private set; get; }
+    public static Network_Client Instance { private set; get; }
 
     #region Connection_Info
     //private const string LOGIN_SERVER_IP = "130.211.235.128"; //TODO: make this static @GCP
@@ -37,8 +37,8 @@ public class Client : MonoBehaviour
     #endregion
 
     #region Stored_Data
-    Dictionary<string,Game_Location> locations = new Dictionary<string, Game_Location>();
-    Dictionary<string, Game_Worker> workers = new Dictionary<string, Game_Worker>();
+    Dictionary<string,Message_Location> locations = new Dictionary<string, Message_Location>();
+    Dictionary<string, Message_Worker> workers = new Dictionary<string, Message_Worker>();
     Queue<NetMsg> sendQueue = new Queue<NetMsg>();
     #endregion
 
@@ -283,7 +283,12 @@ public class Client : MonoBehaviour
         //TODO: reference player instance AFTER it has been loaded
 
         //load player
-        Game_Player.Instance.init(msg);
+        Game_Player.Instance.init(msg.player);
+    }
+
+    private void OnWorkerDataRequest(Net_OnWorkerDataRequest msg)
+    {
+        workers.Add(msg.name, new Message_Worker(msg.owner,msg.location,msg.sector,msg.name,msg.isInCombat,msg.activity));
     }
 
     private void OnLocationDataRequest(Net_OnLocationDataRequest msg)
@@ -291,12 +296,8 @@ public class Client : MonoBehaviour
         locations.Add(msg.location.locationName, msg.location);
     }
 
-    private void OnWorkerDataRequest(Net_OnWorkerDataRequest msg)
-    {
-        workers.Add(msg.name, new Game_Worker(msg.owner,msg.location,msg.sector,msg.name,msg.isInCombat,msg.activity));
-    }
     #endregion
-    
+
     #endregion
 
     #region Send
@@ -404,7 +405,7 @@ public class Client : MonoBehaviour
         AddToSendQueue(new Net_WorkerDataRequest(name));
     }
 
-    private void SendLocationDataRequest(string locationName)
+    internal void SendLocationDataRequest(string locationName)
     {
         AddToSendQueue(new Net_LocationDataRequest(locationName));
     }
@@ -417,27 +418,13 @@ public class Client : MonoBehaviour
 
     //TODO : maybe remove this?
     #region Sector_Hub
-    internal Game_Location GetLocationData(string locationName)
+    internal Message_Location GetLocationData(string locationName)
     {
-        if (locations[locationName] != null)
+        if (locations.ContainsKey(locationName))
         {
-            Game_Location loc = locations[locationName];
+            Message_Location loc = locations[locationName];
             locations.Remove(locationName);
             return loc;
-        }
-        else
-        {
-            return null;
-        }
-    }
-
-    internal Game_Worker GetWorkerData(string workerName)
-    {
-        if (workers[workerName] != null)
-        {
-            Game_Worker workerData = workers[workerName];
-            workers.Remove(workerName);
-            return workerData;
         }
         else
         {

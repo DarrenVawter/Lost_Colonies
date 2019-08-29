@@ -15,13 +15,13 @@ public class LoginScene : MonoBehaviour
     public void OnClickCreateAccount()
     {
         DisableInputs();
-        Client.Instance.SendCreateAccount();
+        Network_Client.Instance.SendCreateAccount();
     }
 
     public void OnClickLoginRequest()
     {
         DisableInputs();
-        Client.Instance.SendLoginRequest();
+        Network_Client.Instance.SendLoginRequest();
     }
 
     public void ChangeWelcomeText(string msg)

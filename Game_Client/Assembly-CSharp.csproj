@@ -62,8 +62,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Scripts\Client.cs" />
+    <Compile Include="Assets\Scripts\Game\Game_Location.cs" />
+    <Compile Include="Assets\Scripts\Game\Game_Player.cs" />
+    <Compile Include="Assets\Scripts\Game\Game_Worker.cs" />
     <Compile Include="Assets\Scripts\Login_Lobby\LoginScene.cs" />
+    <Compile Include="Assets\Scripts\Network_Client.cs" />
     <Compile Include="Assets\Scripts\Sector_Hub\SectorScene.cs" />
     <Compile Include="Assets\Scripts\Sector_Hub\SH_CameraHandler.cs" />
     <Compile Include="Assets\Scripts\Sector_Hub\SH_Chat.cs" />
@@ -71,9 +74,9 @@
     <Compile Include="Assets\Scripts\Sector_Hub\SH_ClickHandler.cs" />
     <Compile Include="Assets\Scripts\Sector_Hub\SH_Map.cs" />
     <Compile Include="Assets\Scripts\Sector_Hub\SH_Ship.cs" />
-    <Compile Include="Assets\Scripts\Shared\Game_Types\Game_Location.cs" />
-    <Compile Include="Assets\Scripts\Shared\Game_Types\Game_Player.cs" />
-    <Compile Include="Assets\Scripts\Shared\Game_Types\Game_Worker.cs" />
+    <Compile Include="Assets\Scripts\Shared\Message_Objects\Message_Location.cs" />
+    <Compile Include="Assets\Scripts\Shared\Message_Objects\Message_Player.cs" />
+    <Compile Include="Assets\Scripts\Shared\Message_Objects\Message_Worker.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Login_Messages\Net_CreateAccount.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Login_Messages\Net_LoginRequest.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Login_Messages\Net_OnCreateAccount.cs" />

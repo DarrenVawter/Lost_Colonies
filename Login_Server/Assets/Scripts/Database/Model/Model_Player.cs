@@ -2,12 +2,6 @@
 using MongoDB.Driver;
 using System.Collections.Generic;
 
-public static class SectorCode
-{
-    public const byte None = 0;
-    public const byte RedSector = 1;
-}
-
 public static class PlayerActivity
 {
     public const byte Offline = 0;

@@ -68,9 +68,9 @@
     <Compile Include="Assets\Scripts\Database\Model\Model_Worker.cs" />
     <Compile Include="Assets\Scripts\Database\mongoDatabase.cs" />
     <Compile Include="Assets\Scripts\LoginServer.cs" />
-    <Compile Include="Assets\Scripts\Shared\Game_Types\Game_Location.cs" />
-    <Compile Include="Assets\Scripts\Shared\Game_Types\Game_Player.cs" />
-    <Compile Include="Assets\Scripts\Shared\Game_Types\Game_Worker.cs" />
+    <Compile Include="Assets\Scripts\Shared\Message_Objects\Message_Location.cs" />
+    <Compile Include="Assets\Scripts\Shared\Message_Objects\Message_Player.cs" />
+    <Compile Include="Assets\Scripts\Shared\Message_Objects\Message_Worker.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Login_Messages\Net_CreateAccount.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Login_Messages\Net_LoginRequest.cs" />
     <Compile Include="Assets\Scripts\Shared\Net_Messages\Login_Messages\Net_OnCreateAccount.cs" />

@@ -461,10 +461,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 338308171}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4a4c92c0bb852be4f990c6535c899b44, type: 3}
+  m_Script: {fileID: 11500000, guid: daa96cd81bde8b6408e645cc8d6009f5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  workerObj: {fileID: 3557042523443870803, guid: 8682d177db6abbb419d1813dcf653c29,
+  workerGameObjPrefab: {fileID: 3557042523443870803, guid: 8682d177db6abbb419d1813dcf653c29,
     type: 3}
 --- !u!4 &338308173
 Transform:
@@ -1568,8 +1568,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 619569476}
   m_HandleRect: {fileID: 619569475}
   m_Direction: 2
-  m_Value: 0.0000028610218
-  m_Size: 0.73333323
+  m_Value: 0.0000022888185
+  m_Size: 0.73333335
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
