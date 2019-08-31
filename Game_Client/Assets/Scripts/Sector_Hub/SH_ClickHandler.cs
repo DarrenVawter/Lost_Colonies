@@ -82,14 +82,15 @@ public class SH_ClickHandler : MonoBehaviour
             {
                 switch (hit.collider.gameObject.GetComponent<SH_Clickable>().TYPE)
                 {
-                    case SH_TYPE.Ship:
-                        SectorScene.Instance.displayInfo(hit.collider.gameObject.GetComponent<SH_Ship>());
+                    case LOCATION_TYPE.SHIP:
+                        //SectorScene.Instance.displayInfo(hit.collider.gameObject.GetComponent<Game_Ship>());
                         break;
-                    case SH_TYPE.Colony:
+
+                    case LOCATION_TYPE.COLONY:
                         Debug.Log("Colony clickable not yet implemented.");
                         break;
 
-                    case SH_TYPE.None:
+                    case LOCATION_TYPE.NONE:
                     default:
                         Debug.Log(string.Format("Unexpected SH_Clickable type ({0}).", hit.collider.gameObject.GetComponent<SH_Clickable>().TYPE));
                         break;

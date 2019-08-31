@@ -37,8 +37,6 @@ public class Network_Client : MonoBehaviour
     #endregion
 
     #region Stored_Data
-    Dictionary<string,Message_Location> locations = new Dictionary<string, Message_Location>();
-    Dictionary<string, Message_Worker> workers = new Dictionary<string, Message_Worker>();
     Queue<NetMsg> sendQueue = new Queue<NetMsg>();
     #endregion
 
@@ -87,6 +85,7 @@ public class Network_Client : MonoBehaviour
 #endif
         isStarted = true;
     }
+
     public void ShutdownNetwork()
     {        
 
@@ -95,6 +94,7 @@ public class Network_Client : MonoBehaviour
         isStarted = false;
         isConnected = false;
     }
+
     public void UpdateMessagePump()
     {
 
@@ -145,6 +145,8 @@ public class Network_Client : MonoBehaviour
     #endregion
 
     #region OnData
+
+        #region Route
     private void OnData(int connectionID, int channelID, int recHostID, NetMsg msg)
     {
         switch (msg.RT)
@@ -167,8 +169,9 @@ public class Network_Client : MonoBehaviour
 
         }
     }
-    
-    #region Login_Screen
+        #endregion
+
+        #region Login_Screen
     private void OnLoginMessage(int connectionID, int channelID, int recHostID, NetMsg msg)
     {
         switch (msg.OP)
@@ -249,26 +252,32 @@ public class Network_Client : MonoBehaviour
             //*now connected to sector server*
             
             //request info to init player game object
-            SendThisPlayerDataRequest(token);
+            SendInitPlayerDataRequest(token);
         }
     }
-    #endregion
+        #endregion
 
-    #region Sector_Hub
+        #region Sector_Hub
     private void OnSectorMessage(int connectionID, int channelID, int recHostID, NetMsg msg)
     {
         switch (msg.OP)
         {
-            case NetSectorOP.OnThisPlayerDataRequest:
-                OnThisPlayerDataRequest((Net_OnThisPlayerDataRequest)msg);
+            case NetSectorOP.OnInitPlayerDataRequest:
+                //TODO: reference player instance AFTER it has been loaded
+                Game_Player.Instance.init((Net_OnInitPlayerDataRequest)msg);
                 break;
 
-            case NetSectorOP.OnLocationDataRequest:
-                OnLocationDataRequest((Net_OnLocationDataRequest)msg);
+            case NetSectorOP.OnActiveWorkerChange:
+                Game_Player.Instance.setActive((Net_OnActiveWorkerChange)msg);
+                SectorScene.Instance.changeActiveTrackingLocation();
                 break;
 
-            case NetSectorOP.OnWorkerDataRequest:
-                OnWorkerDataRequest((Net_OnWorkerDataRequest)msg);
+            case NetSectorOP.OnTrackedObjectChange:
+                SectorScene.Instance.updateTrackedMobileObject((Net_OnTrackedObjectChange)msg);
+                break;
+
+            case NetSectorOP.OnTrackedObjectInitRequest:
+                SectorScene.Instance.initTrackedObject((Net_OnTrackedObjectInitRequest)msg);
                 break;
 
             case NetSectorOP.None:
@@ -277,30 +286,13 @@ public class Network_Client : MonoBehaviour
                 break;
         }
     }
-
-    private void OnThisPlayerDataRequest(Net_OnThisPlayerDataRequest msg)
-    {
-        //TODO: reference player instance AFTER it has been loaded
-
-        //load player
-        Game_Player.Instance.init(msg.player);
-    }
-
-    private void OnWorkerDataRequest(Net_OnWorkerDataRequest msg)
-    {
-        workers.Add(msg.name, new Message_Worker(msg.owner,msg.location,msg.sector,msg.name,msg.isInCombat,msg.activity));
-    }
-
-    private void OnLocationDataRequest(Net_OnLocationDataRequest msg)
-    {
-        locations.Add(msg.location.locationName, msg.location);
-    }
-
-    #endregion
+        #endregion
 
     #endregion
 
     #region Send
+
+    #region Server
     private void SendServer()
     {
         if (!isConnected || sendQueue.Count == 0)
@@ -323,6 +315,7 @@ public class Network_Client : MonoBehaviour
     {
         sendQueue.Enqueue(msg);
     }
+    #endregion
 
     #region Login_Screen
     internal void SendCreateAccount()
@@ -395,44 +388,38 @@ public class Network_Client : MonoBehaviour
 
     #region Sector_Hub
 
-    private void SendThisPlayerDataRequest(string token)
+    #region PlayerData
+    private void SendInitPlayerDataRequest(string token)
     {
-        AddToSendQueue(new Net_ThisPlayerDataRequest(token));
+        AddToSendQueue(new Net_InitPlayerDataRequest(token));
     }
 
-    internal void SendWorkerDataRequest(string name)
+    private void SendActiveWorkerChangeRequest(string token, byte workerIndex)
     {
-        AddToSendQueue(new Net_WorkerDataRequest(name));
+        AddToSendQueue(new Net_ActiveWorkerChangeRequest(token, workerIndex));
     }
+    #endregion
 
-    internal void SendLocationDataRequest(string locationName)
+    #region TrackingData
+    internal void SendTrackedObjectInitRequest(string locationName)
     {
-        AddToSendQueue(new Net_LocationDataRequest(locationName));
+        AddToSendQueue(new Net_TrackedObjectInitRequest(token, locationName));
     }
-    
+    #endregion
+
+    #region ShipData
+    internal void SendSetSailRequest(string shipName)
+    {
+        AddToSendQueue(new Net_SetSailRequest(token,shipName));
+    }
     #endregion
 
     #endregion
 
+    #endregion
+
+    //TODO: is this ever going to be needed?
     #region GetData
-
-    //TODO : maybe remove this?
-    #region Sector_Hub
-    internal Message_Location GetLocationData(string locationName)
-    {
-        if (locations.ContainsKey(locationName))
-        {
-            Message_Location loc = locations[locationName];
-            locations.Remove(locationName);
-            return loc;
-        }
-        else
-        {
-            return null;
-        }
-    }
-    #endregion
-
     #endregion
 
 }

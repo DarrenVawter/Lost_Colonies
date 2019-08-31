@@ -5,6 +5,14 @@ using MongoDB.Driver;
 using MongoDB.Driver.Builders;
 using UnityEngine;
 
+public static class COLLECTIONS
+{
+    public const string ACCOUNTS = "accounts";
+    public const string PLAYERS = "players";
+    public const string WORKERS = "workers";
+    public const string SHIPS = "ships";
+}
+
 public class MongoDatabase
 {
 
@@ -23,10 +31,10 @@ public class MongoDatabase
     private MongoServer server;
     private MongoDB.Driver.MongoDatabase mdb;
 
-    private MongoCollection<Model_Account> accountCollection;
-    private MongoCollection<Model_Player> playerCollection;
-    private MongoCollection<Model_Worker> workerCollection;
-    private MongoCollection<Model_Ship> shipCollection;
+    private MongoCollection<DB_Account> accountCollection;
+    private MongoCollection<DB_Player> playerCollection;
+    private MongoCollection<DB_Worker> workerCollection;
+    private MongoCollection<DB_Ship> shipCollection;
     
     #region NetworkBehavior
     public void Init()
@@ -36,29 +44,43 @@ public class MongoDatabase
         mdb = server.GetDatabase(DB_NAME);
 
         //init collections(tables) here
-        accountCollection = mdb.GetCollection<Model_Account>("accounts");
-        playerCollection = mdb.GetCollection<Model_Player>("players");
-        workerCollection = mdb.GetCollection<Model_Worker>("workers");
-        shipCollection = mdb.GetCollection<Model_Ship>("ships");
+        accountCollection = mdb.GetCollection<DB_Account>(COLLECTIONS.ACCOUNTS);
+        playerCollection = mdb.GetCollection<DB_Player>(COLLECTIONS.PLAYERS);
+        workerCollection = mdb.GetCollection<DB_Worker>(COLLECTIONS.WORKERS);
+        shipCollection = mdb.GetCollection<DB_Ship>(COLLECTIONS.SHIPS);
 
         Debug.Log("Initialized " + DB_NAME);
+        
+        //TODO remove this
+        //setting ship0 to NONE, so player can request sail
+        DB_Ship ship = FetchShipByName("ship0");
+        ship.activity = SHIP_ACTIVITY.NONE;
+        updateShip(ship);
+        ship = FetchShipByName("ship1");
+        ship.activity = SHIP_ACTIVITY.NONE;
+        updateShip(ship); ship = FetchShipByName("ship2");
+        ship.activity = SHIP_ACTIVITY.NONE;
+        updateShip(ship);
 
-        //TODO REMOVE!
         /*
-        for (int i = 0; i < 20; i++)
+        for (int i = 0; i < 50; i++)
         {
-            Model_Ship ship = new Model_Ship();
-            ship.shipName = "ship" + i;
-            ship.isBusy = false;
-            ship.isDocked = false;
-            ship.sector = 1;
-            ship.velX = 0;
-            ship.velY = 0;
-            ship.posX = i + 5;
-            ship.posY = 5;
-            shipCollection.Insert(ship);
-        }        
-        */
+            DB_Ship ship2 = new DB_Ship();
+            ship2.shipName = "ship" + i;
+            ship2.sector = SECTOR_CODE.REDSECTOR;
+            ship2.velX = 0;
+            ship2.velY = 0;
+            ship2.posX = i + 5;
+            ship2.posY = 5;
+            ship2.frame = 0;
+            ship2.color1 = 1;
+            ship2.color2 = 2;
+            ship2.color3 = 3;
+            ship2.activity = SHIP_ACTIVITY.NONE;
+            ship2.workersOnBoard = new List<MongoDBRef>();
+            shipCollection.Insert(ship2);
+        } */
+        
 
     }
     public void Shutdown()
@@ -70,11 +92,10 @@ public class MongoDatabase
     #endregion
 
     #region Insert
-
     public bool CreateAccount(string username, string hashedPassword, string email)
     {
         //*********************************Account creation*********************************
-        Model_Account account = new Model_Account();
+        DB_Account account = new DB_Account();
 
         //validate email
         //TODO: send verification e-mail
@@ -113,51 +134,61 @@ public class MongoDatabase
         account.Status = LoginStatus.Offline;
 
         //TODO: dynamically assign default sector
-        account.Sector = SectorCode.RedSector;
+        account.Sector = SECTOR_CODE.REDSECTOR;
 
         account.CreatedOn = DateTime.Now;
         account.LastLogin = account.CreatedOn;
         //*********************************************************************************
 
         //*********************************Player creation*********************************
-        Model_Player player = new Model_Player();
+        DB_Player player = new DB_Player();
 
         player.Username = account.Username;
         player.Discriminator = account.Discriminator;
         player.CreatedOn = account.CreatedOn;
         player.LastLogin = account.CreatedOn;
-        player.Sector = account.Sector;
-        player.Activity = PlayerActivity.Offline;
 
+        //TODO: change up this worker generation so that we just call a createWorker(DB_Worker worker) method
         //assign default worker for new player
-        //TODO: allow this worker to be customized
-        //TODO: set this worker's owner
+        //TODO: allow this worker to be customized (appearance/name)
         player.Workers = new List<MongoDBRef>();
-        player.Workers.Add(SpawnDefaultWorker("DEFAULTTESTNAME" + UnityEngine.Random.Range(0, 10000)));
+        player.Workers.Add(SpawnDefaultWorker("DEFAULT WORKER NAME" + UnityEngine.Random.Range(0, 10000)));
+        player.ActiveWorkerIndex = 0;
         //*********************************************************************************
-        
+
         //now that all data is validated and set:
             //insert account
         accountCollection.Insert(account);
             //insert player
         playerCollection.Insert(player);
-        
+
+        //set default worker's owner ref
+            //get player from db (for db ref)
+        player = FetchPlayerByUsernameAndDiscriminator(account.Username + "#" + account.Discriminator);
+            //get and update worker
+        DB_Worker worker = FetchWorkerByID(player.Workers[player.ActiveWorkerIndex].Id.AsObjectId);
+        worker.owner = new MongoDBRef(COLLECTIONS.PLAYERS, player._id);
+        updateWorker(worker);
+
+        //TODO: remove this TESTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+        //set default ship's owner ref
+            //get and update ship
+        DB_Ship ship = FetchShipByID(worker.location.Id.AsObjectId);
+        ship.Owner = new MongoDBRef(COLLECTIONS.PLAYERS, player._id);
+        updateShip(ship);
+
         return true;
     }
 
     public MongoDBRef SpawnDefaultWorker(string workerName)
     {
-        Model_Worker defaultWorker = new Model_Worker();
-        defaultWorker.isInCombat = false;
-        defaultWorker.activity = WorkerActivity.Idle;
-        
-        //TODO: change default spawn location
-        defaultWorker.location = GETNEXTAVAILABLESHIPDBREFERENCETESTTTT();
-        defaultWorker.locationName = shipCollection.FindOne(Query<Model_Ship>.EQ(s => s._id, defaultWorker.location.Id.AsObjectId)).shipName;
-        
-        //TODO: generate name for worker
+        DB_Worker defaultWorker = new DB_Worker();
+        defaultWorker.activity = WORKER_ACTIVITY.IDLE;
         defaultWorker.workerName = workerName;
 
+        //TODO: change default spawn location
+        defaultWorker.location = GETNEXTAVAILABLESHIPDBREFERENCETESTTTT();
+        
         //stats
         //**
         //TODO populate
@@ -169,42 +200,53 @@ public class MongoDatabase
         //**
 
         workerCollection.Insert(defaultWorker);
-        return new MongoDBRef("workers",workerCollection.FindOne(Query<Model_Worker>.EQ(w => w.workerName, workerName))._id);
+
+        //Add player reference to default spawn location
+            //get location
+            //TODO: make default spawn location a colony, not a ship (?)
+        DB_Ship ship = FetchShipByID(defaultWorker.location.Id.AsObjectId);
+            //get worker from db (for db ref)
+        defaultWorker = FetchWorkerByName(workerName);
+            //update location
+        ship.workersOnBoard.Add(new MongoDBRef(COLLECTIONS.WORKERS, defaultWorker._id));
+        updateShip(ship);
+
+        return new MongoDBRef("workers",workerCollection.FindOne(Query<DB_Worker>.EQ(w => w.workerName, workerName))._id);
     }
 
     private MongoDBRef GETNEXTAVAILABLESHIPDBREFERENCETESTTTT()
     {
-        Model_Ship ship;
+        DB_Ship ship;
         string shipName = "ship0";
-        var query = Query<Model_Ship>.EQ(s => s.shipName, shipName);
+        var query = Query<DB_Ship>.EQ(s => s.shipName, shipName);
 
         for (int i = 1; i < 50; i++)
         {
             ship = FetchShipByName(shipName);
 
-            if(ship != null)
+            if(ship != null && ship.Owner == null && ship.workersOnBoard.Count == 0)
             {
                 return new MongoDBRef(shipCollection.Name, ship._id);
             }
 
             shipName = "ship" + i;
-            query = Query<Model_Ship>.EQ(s => s.shipName, shipName);
+            query = Query<DB_Ship>.EQ(s => s.shipName, shipName);
         }
 
         Debug.Log("Alpha version is limited to 50 ships... reset db to try again.");
         return null;
     }
 
-    public Model_Account LoginAccount(string usernameOrEmail, string hashedPassword, int connectionID, string token)
+    public DB_Account LoginAccount(int connectionID, int recHostID, string usernameOrEmail, string hashedPassword, string token)
     {
-        Model_Account account = null;
+        DB_Account account = null;
         IMongoQuery query = null;
 
         if (Utility.IsEmail(usernameOrEmail))
         {
             query = Query.And(
-                Query<Model_Account>.EQ(u => u.Email, usernameOrEmail),
-                Query<Model_Account>.EQ(u => u.ShaPassword, hashedPassword)
+                Query<DB_Account>.EQ(u => u.Email, usernameOrEmail),
+                Query<DB_Account>.EQ(u => u.ShaPassword, hashedPassword)
             );
 
             //TODO: veryify only one is found
@@ -213,8 +255,8 @@ public class MongoDatabase
         else if (Utility.IsUsername(usernameOrEmail))//TODO include discriminator
         {
             query = Query.And(
-                Query<Model_Account>.EQ(u => u.Username, usernameOrEmail),
-                Query<Model_Account>.EQ(u => u.ShaPassword, hashedPassword)
+                Query<DB_Account>.EQ(u => u.Username, usernameOrEmail),
+                Query<DB_Account>.EQ(u => u.ShaPassword, hashedPassword)
             );
 
             //TODO: veryify only one is found
@@ -232,20 +274,8 @@ public class MongoDatabase
             account.Status = 1;
             account.LastLogin = DateTime.Now;
 
-            accountCollection.Update(query, Update<Model_Account>.Replace(account));
+            accountCollection.Update(query, Update<DB_Account>.Replace(account));
 
-            //update player entry
-            Model_Player player = FetchPlayerByUsernameAndDiscriminator(account.Username + "#" + account.Discriminator);
-            player.Token = token;
-            player.Activity = PlayerActivity.Idle;
-            player.LastLogin = DateTime.Now;
-
-            query = Query.And(
-                Query<Model_Player>.EQ(p => p.Username, player.Username),
-                Query<Model_Player>.EQ(p => p.Discriminator, player.Discriminator)
-            );
-
-            playerCollection.Update(query, Update<Model_Player>.Replace(player));
         }
         else
         {
@@ -255,70 +285,102 @@ public class MongoDatabase
         return account;
 
     }
-    
     #endregion
 
     #region Fetch
-    public Model_Account FetchAccountByToken(string token)
+
+    #region Account
+    public DB_Account FetchAccountByToken(string token)
     {
-        var query = Query<Model_Account>.EQ(u => u.Token, token);
+        var query = Query<DB_Account>.EQ(u => u.Token, token);
         return accountCollection.FindOne(query);
     }
-    public Model_Account FetchAccountByEmail(string email)
+    public DB_Account FetchAccountByEmail(string email)
     {
-        var query = Query<Model_Account>.EQ(u => u.Email, email);
+        var query = Query<DB_Account>.EQ(u => u.Email, email);
         return accountCollection.FindOne(query);
     }
-    public Model_Account FetchAccountByUsernameAndDiscriminator(string usernameAndDiscriminator)
+    public DB_Account FetchAccountByUsernameAndDiscriminator(string usernameAndDiscriminator)
     {
         string[] userDiscrim = usernameAndDiscriminator.Split('#');
         var query = Query.And(
-                Query<Model_Account>.EQ(u => u.Username, userDiscrim[0]),
-                Query<Model_Account>.EQ(u => u.Discriminator, userDiscrim[1])
+                Query<DB_Account>.EQ(u => u.Username, userDiscrim[0]),
+                Query<DB_Account>.EQ(u => u.Discriminator, userDiscrim[1])
             );
         return accountCollection.FindOne(query);
     }
+    #endregion
 
-    public Model_Player FetchPlayerByToken(string token)
+    #region Player
+    public DB_Player FetchPlayerByToken(string token)
     {
-        var query = Query<Model_Player>.EQ(p => p.Token, token);
+        var query = Query<DB_Player>.EQ(p => p.Token, token);
         return playerCollection.FindOne(query);
     }
-    public Model_Player FetchPlayerByUsernameAndDiscriminator(string usernameAndDiscriminator)
+
+    public DB_Player FetchPlayerByID(ObjectId _id)
+    {
+        var query = Query<DB_Player>.EQ(p => p._id, _id);
+        return playerCollection.FindOne(query);
+    }
+
+    public DB_Player FetchPlayerByUsernameAndDiscriminator(string usernameAndDiscriminator)
     {
         string[] userDiscrim = usernameAndDiscriminator.Split('#');
         var query = Query.And(
-                Query<Model_Player>.EQ(p => p.Username, userDiscrim[0]),
-                Query<Model_Player>.EQ(p => p.Discriminator, userDiscrim[1])
+                Query<DB_Player>.EQ(p => p.Username, userDiscrim[0]),
+                Query<DB_Player>.EQ(p => p.Discriminator, userDiscrim[1])
             );
         return playerCollection.FindOne(query);
     }
+    #endregion
 
-    public Model_Ship FetchShipByName(string shipName)
+    #region Worker
+    public DB_Worker FetchWorkerByName(string workerName)
     {
-        var query = Query<Model_Ship>.EQ(s => s.shipName, shipName);
-        return shipCollection.FindOne(query);
-    }
-
-    public Model_Worker FetchWorkerByName(string workerName)
-    {
-        var query = Query<Model_Worker>.EQ(w => w.workerName, workerName);
+        var query = Query<DB_Worker>.EQ(w => w.workerName, workerName);
         return workerCollection.FindOne(query);
     }
-    public Model_Worker FetchWorkerByID(ObjectId _id)
+
+    public DB_Worker FetchWorkerByID(ObjectId _id)
     {
-        var query = Query<Model_Worker>.EQ(w => w._id, _id);
+        var query = Query<DB_Worker>.EQ(w => w._id, _id);
         return workerCollection.FindOne(query);
     }
-    public List<Model_Worker> FetchWorkersByPlayer(Model_Player player)
+
+    public List<DB_Worker> FetchWorkersByPlayer(DB_Player player)
     {
-        List<Model_Worker> workers = new List<Model_Worker>();
+        List<DB_Worker> workers = new List<DB_Worker>();
         player.Workers.ForEach(delegate (MongoDBRef workerRef)
         {
             workers.Add(FetchWorkerByID(workerRef.Id.AsObjectId));
         });
         return workers;
     }
+
+    public List<DB_Worker> FetchWorkersByShip(DB_Ship ship)
+    {
+        List<DB_Worker> workers = new List<DB_Worker>();
+        ship.workersOnBoard.ForEach(delegate (MongoDBRef workerRef)
+        {
+            workers.Add(FetchWorkerByID(workerRef.Id.AsObjectId));
+        });
+        return workers;
+    }
+    #endregion
+
+    #region Ship
+    public DB_Ship FetchShipByName(string shipName)
+    {
+        var query = Query<DB_Ship>.EQ(s => s.shipName, shipName);
+        return shipCollection.FindOne(query);
+    }
+    public DB_Ship FetchShipByID(ObjectId _id)
+    {
+        var query = Query<DB_Ship>.EQ(s => s._id, _id);
+        return shipCollection.FindOne(query);
+    }
+    #endregion
 
     /*      FETCH ALL******************************
      * public List<Model> FetchAll(){
@@ -333,27 +395,29 @@ public class MongoDatabase
     #endregion
 
     #region Update
-    /****************************************************
-     * public void Update(){
-     *     var query = query...
-     *     var  document = collection.FindOne(query); 
-     *     
-     *     document.field = updatedValue;
-     *     
-     *     collection.Update(query, Update<Model>.Replace(document));     
-     * }
-     */
-
-    /*
-     public void updateTest()
+    public void updateAccount(DB_Account accountUpdate)
     {
-        var query = Query<Model_Account>.EQ(u => u.Username, "aaaa");
-        var user = testCollection.FindOne(query);
+        IMongoQuery query = Query<DB_Account>.EQ(a => a._id, accountUpdate._id);
+        accountCollection.Update(query, Update<DB_Account>.Replace(accountUpdate));
+    }
 
-        user.Discriminator = "0500";
+    public void updatePlayer(DB_Player playerUpdate)
+    {
+        IMongoQuery query = Query<DB_Player>.EQ(p => p._id, playerUpdate._id);
+        playerCollection.Update(query, Update<DB_Player>.Replace(playerUpdate));
+    }
 
-        testCollection.Update(query, Update<Model_Account>.Replace(user));
-    }*/
+    public void updateWorker(DB_Worker workerUpdate)
+    {
+        IMongoQuery query = Query<DB_Worker>.EQ(w => w._id, workerUpdate._id);
+        workerCollection.Update(query, Update<DB_Worker>.Replace(workerUpdate));
+    }
+
+    public void updateShip(DB_Ship shipUpdate)
+    {
+        IMongoQuery query = Query<DB_Ship>.EQ(s => s._id, shipUpdate._id);
+        shipCollection.Update(query, Update<DB_Ship>.Replace(shipUpdate));
+    }
     #endregion
 
     #region Delete
@@ -361,7 +425,7 @@ public class MongoDatabase
     public void RemoveAccountByEmail(string email)
     {
         ObjectId id = FetchAccountByEmail(email)._id;
-        accountCollection.Remove(Query<Model_Account>.EQ(u => u._id, id));
+        accountCollection.Remove(Query<DB_Account>.EQ(u => u._id, id));
     }
     #endregion
 

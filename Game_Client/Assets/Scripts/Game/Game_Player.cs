@@ -4,8 +4,9 @@ using UnityEngine;
 public class Game_Player : MonoBehaviour
 {
     //static ref to player obj
-    public static Game_Player Instance;
-    
+    public static Game_Player Instance = null;
+    public bool isInit = false;
+
     //player's username
     public string username { get; set; }
     public string discriminator { get; set; }
@@ -21,19 +22,15 @@ public class Game_Player : MonoBehaviour
         Instance = this;
     }
 
-    internal void init(Message_Player player)
+    internal void init(Net_OnInitPlayerDataRequest playerData)
     {
         //ensure the worker list is empty
         workers.RemoveRange(0,workers.Count);
-
-        //init player values
-        username = player.username;
-        discriminator = player.discriminator;
-
+        
         //init player's workers from msg
         GameObject workerGameObj;
         Game_Worker worker;
-        foreach (Message_Worker gwData in player.workers)
+        foreach (Message_This_Worker gwData in playerData.Workers)
         {
             //create the game object which will contain the worker object
             workerGameObj = Instantiate(workerGameObjPrefab, transform);
@@ -48,12 +45,24 @@ public class Game_Player : MonoBehaviour
             workers.Add(workerGameObj.GetComponent<Game_Worker>());
 
         }
+        
+        //set active worker dynamically
+        activeWorker = workers[playerData.ActiveWorkerIndex];
 
-        //**
-        //TODO: set active worker dynamically
-        //**
-        workers[0].SetActive();
+        //set init flag
+        isInit = true;
 
+        //TODO REMOVE THIS
+        SETSAILTESTTTTTT();
     }
 
+    internal void setActive(Net_OnActiveWorkerChange msg)
+    {
+        activeWorker = workers[msg.workerIndex];
+    }
+
+    private void SETSAILTESTTTTTT()
+    {
+        Network_Client.Instance.SendSetSailRequest(activeWorker.locationName);
+    }
 }

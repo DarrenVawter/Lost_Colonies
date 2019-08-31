@@ -2107,7 +2107,7 @@ GameObject:
   - component: {fileID: 976305055}
   - component: {fileID: 976305054}
   m_Layer: 0
-  m_Name: Client
+  m_Name: Network_Client
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -31,7 +31,7 @@ public class SH_CameraHandler : MonoBehaviour
 
     //camera zoom, position, and velocity
     private float zoom;
-    private Vector3 pos;
+    private Vector3 pos = new Vector3(-1000,-1000,-1000);
     private Vector2 vel;
 
     //track mouse position
@@ -76,9 +76,11 @@ public class SH_CameraHandler : MonoBehaviour
         isInit = true;
     }
 
+    /*
     // Update is called once per frame
     private void Update()
     {
+        
         if (!isInit)
         {
             return;
@@ -174,14 +176,16 @@ public class SH_CameraHandler : MonoBehaviour
         }
 
     }
+    */
 
-    internal void recenter(GameObject target)
+    internal void reCenter(Vector2 target)
     {
-        transform.position = new Vector3(target.transform.position.x, target.transform.position.y, -1000);
+        pos = new Vector3(target.x, target.y, pos.z);
+        updateCameraPosition();
     }
 
     private void updateCameraPosition()
-    {
+    {/*
         //check if out of bounds            
         if (pos.x < cam.orthographicSize * aspect - 1 - UIPadding[2] * 2 * cam.orthographicSize * aspect)
         {
@@ -200,6 +204,7 @@ public class SH_CameraHandler : MonoBehaviour
         {
             pos.y = mapHeight - cam.orthographicSize + UIPadding[0] * 2 * cam.orthographicSize;
         }
+        */
 
         //update actual position
         transform.position = pos;

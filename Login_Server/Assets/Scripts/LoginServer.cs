@@ -182,24 +182,29 @@ public class LoginServer : MonoBehaviour
     private void LoginRequest(int connectionID, int recHostID, Net_LoginRequest lr)
     {
         string loginToken = Utility.GenerateRandomToken(256);
-        Model_Account account = mdb.LoginAccount(lr.user, RSA.decrypt(lr.password,connectionKeys[connectionID]), connectionID, loginToken);
+        DB_Account account = mdb.LoginAccount(connectionID, recHostID, lr.user, RSA.decrypt(lr.password,connectionKeys[connectionID]), loginToken);
                 
         if(account != null)
         {
             //successful login
-
+            
             //get appropriate sector ip
             string sectorIP = null;
             switch (account.Sector)
             {
-                case SectorCode.RedSector:
+                case SECTOR_CODE.REDSECTOR:
                     sectorIP = "127.0.0.1";
                     break;
 
-                case SectorCode.None:
+                case SECTOR_CODE.NONE:
                 default:
                     break;
             }
+
+            //update player connection id
+            DB_Player player = mdb.FetchPlayerByUsernameAndDiscriminator(account.Username + "#" + account.Discriminator);
+            player.Token = loginToken;
+            mdb.updatePlayer(player);
 
             //respond to client
             SendClient(connectionID, recHostID, new Net_OnLoginRequest(1, account.Username, account.Discriminator, loginToken, sectorIP));

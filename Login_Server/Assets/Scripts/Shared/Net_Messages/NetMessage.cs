@@ -1,5 +1,4 @@
-﻿
-//**
+﻿//**
 //TODO: make custom binary reader/writer instead of using serializable
 //**
 
